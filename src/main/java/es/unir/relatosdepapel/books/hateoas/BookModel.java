@@ -23,6 +23,7 @@ public class BookModel extends RepresentationModel<BookModel> {
     private String imageUrl;
     private Boolean isDigital;
     private Byte rating;
+    private Boolean visibility;
 
     public BookModel(Book book) {
         this.id = book.getId();

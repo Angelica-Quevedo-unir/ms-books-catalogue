@@ -31,6 +31,19 @@ public class BookModelAssembler implements RepresentationModelAssembler<Book, En
         return EntityModel.of(bookModel);
     }
 
+    public Book toEntity(BookModel bookModel) {
+        Book book = new Book();
+        book.setId(bookModel.getId());
+        book.setTitle(bookModel.getTitle());
+        book.setAuthor(bookModel.getAuthor());
+        book.setPublicationDate(bookModel.getPublicationDate());
+        book.setCategory(bookModel.getCategory());
+        book.setIsbn(bookModel.getIsbn());
+        book.setRating(bookModel.getRating());
+        book.setVisibility(bookModel.getVisibility());
+        return book;
+    }
+
     public PagedModel<EntityModel<BookModel>> toPagedModel(Page<Book> bookPage) {
         List<EntityModel<BookModel>> bookModels = bookPage.getContent().stream()
                 .map(this::toModel)

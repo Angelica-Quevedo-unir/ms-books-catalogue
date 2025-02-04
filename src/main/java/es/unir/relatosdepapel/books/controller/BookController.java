@@ -82,4 +82,33 @@ public class BookController {
                 .orElseThrow(() -> new ResourceNotFoundException("Book not found with ISBN: " + isbn));
         return ResponseEntity.ok(bookModelAssembler.toModel(book));
     }
+
+    @Operation(summary = "Search books by filters", description = "Retrieve a list of books based on search criteria with pagination and sorting")
+    @ApiResponse(responseCode = "200", description = "Filtered books list retrieved successfully")
+    @GetMapping("/search")
+    public ResponseEntity<PagedModel<EntityModel<BookModel>>> searchBooks(
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "author", required = false) String author,
+            @RequestParam(value = "isbn", required = false) String isbn,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sortField", defaultValue = "title") String sortField,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+
+        Page<Book> bookPage = bookService.searchBooks(title, author, isbn, category, page, size, sortField, sortDirection);
+        return ResponseEntity.ok(bookModelAssembler.toPagedModel(bookPage));
+    }
+
+    @Operation(summary = "Update book partially", description = "Partial update of a book by its ID")
+    @ApiResponse(responseCode = "200", description = "Book updated successfully")
+    @PatchMapping("/{bookId}")
+    public ResponseEntity<EntityModel<BookModel>> partialUpdateBook(
+            @PathVariable Long bookId,
+            @RequestBody Book partialUpdate) {
+
+        Book updatedBook = bookService.partialUpdateBook(bookId, partialUpdate);
+        return ResponseEntity.ok(bookModelAssembler.toModel(updatedBook));
+    }
+
 }
