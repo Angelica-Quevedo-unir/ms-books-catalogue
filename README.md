@@ -14,7 +14,7 @@ el proyecto esta diseñado bajos  los principios **REST** y utiliza **HATEOAS** 
 
 El microservicio **ms-book-catalogue** forma parte de la siguiente arquitectura:
 
-![Swagger UI](src/main/resources/static/architecture.png)
+![Swagger UI](src/main/resources/static/architecture.jpg)
 
 Este servicio expone los endpoints relacionados con el catálogo de libros a través de un [**API Gateway**](https://github.com/Angelica-Quevedo-unir/ms-springcloud-gateway). Los endpoints son registrados automáticamente en [**Eureka Server**](https://github.com/Angelica-Quevedo-unir/ms-eureka-server) , lo que permite la detección dinámica de servicios.
 Además, los servicios internos encargados de la gestión de inventario son consumidos de forma interna y directa por el componente de [**ms-books-payments**](https://github.com/Angelica-Quevedo-unir/ms-books-payment), garantizando la validación del stock disponible antes de procesar un pago.
