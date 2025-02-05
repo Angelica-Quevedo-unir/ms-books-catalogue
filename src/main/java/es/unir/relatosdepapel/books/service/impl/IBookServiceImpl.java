@@ -74,9 +74,14 @@ public class IBookServiceImpl implements IBookService {
     @Override
     public Page<Book> searchBooks(String title, String author, String isbn, String category,
                                   int page, int size, String sortField, String sortDirection) {
+        String processedTitle = (title != null) ? "%" + title.toLowerCase() + "%" : null;
+        String processedAuthor = (author != null) ? "%" + author.toLowerCase() + "%" : null;
+        String processedCategory = (category != null) ? category.toLowerCase() : null;
+
         Sort sort = createSort(sortField, sortDirection);
         Pageable pageable = PageRequest.of(page, size, sort);
-        return bookRepository.findBooksByParameters(title, author, isbn, category, pageable);
+
+        return bookRepository.findBooksByParameters(processedTitle, processedAuthor, isbn, processedCategory, pageable);
     }
 
     private void validateBookExists(Long id) {

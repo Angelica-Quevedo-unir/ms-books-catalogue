@@ -10,6 +10,7 @@ public interface IBookService {
 
     Book createBook(Book book);
     Page<Book> getAllBooks(Pageable pageable);
+    void validateSortField(String sortField);
     Optional<Book> getBookById(Long id);
     Optional<Book> getBookByIsbn(String isbn);
     Book updateBook(Long id, Book book);
