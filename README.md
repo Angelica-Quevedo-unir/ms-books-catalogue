@@ -112,7 +112,7 @@ Ejemplo de respuesta con HATEOAS:
 El microservicio utiliza **Swagger UI** para documentar y probar la API de manera interactiva. Puedes acceder a la interfaz de Swagger en la siguiente URL una vez que el microservicio esté en ejecución:
 
 ```
-http://${HOST}/swagger-ui.html
+http://${HOST}/book-catalogue/swagger-ui/index.html#
 ```
 
 ### **Imagen de Swagger UI**
