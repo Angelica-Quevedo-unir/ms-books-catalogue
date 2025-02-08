@@ -176,43 +176,51 @@ Ejecuta los siguientes scripts SQL en la base de datos **`books_catalogue_db`**:
 
 ### **1. Creación de la tabla `books`**
 ```sql
-CREATE TABLE `books` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'Identificador único del libro',
-  `title` VARCHAR(255) NOT NULL COMMENT 'Título del libro',
-  `author` VARCHAR(255) NOT NULL COMMENT 'Autor del libro',
-  `publication_date` DATE NOT NULL COMMENT 'Fecha de publicación del libro',
-  `category` VARCHAR(100) NOT NULL COMMENT 'Categoría del libro',
-  `isbn` VARCHAR(13) NOT NULL,
-  `description` VARCHAR(255) DEFAULT NULL,
-  `price` DECIMAL(38,2) DEFAULT NULL,
-  `image_url` VARCHAR(255) DEFAULT NULL,
-  `is_digital` TINYINT(1) DEFAULT '0' COMMENT 'Indica si el libro es digital (TRUE) o físico (FALSE)',
-  `rating` TINYINT NOT NULL,
-  `visibility` TINYINT(1) DEFAULT '1' COMMENT 'Indica si el libro es visible (TRUE) o no (FALSE)',
-  `created_at` DATETIME(6) DEFAULT NULL,
-  `updated_at` DATETIME(6) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `idx_books_isbn` (`isbn`),
-  KEY `idx_books_title` (`title`),
-  KEY `idx_books_author` (`author`),
-  KEY `idx_books_category` (`category`),
-  KEY `idx_books_title_author` (`title`, `author`),
-  CONSTRAINT `books_chk_1` CHECK (`rating` >= 1 AND `rating` <= 5)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Tabla que almacena los libros del catálogo';
+CREATE TABLE books (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador único del libro',
+    title VARCHAR(255) NOT NULL COMMENT 'Título del libro',
+    author VARCHAR(255) NOT NULL COMMENT 'Autor del libro',
+    publication_date DATE NOT NULL COMMENT 'Fecha de publicación del libro',
+    category VARCHAR(100) NOT NULL COMMENT 'Categoría del libro',
+    isbn VARCHAR(13) NOT NULL UNIQUE COMMENT 'Código ISBN único del libro',
+    description TEXT COMMENT 'Descripción breve del libro',
+    price DECIMAL(10, 2) NOT NULL COMMENT 'Precio del libro',
+    image_url VARCHAR(2083) COMMENT 'URL de la imagen de la portada',
+    is_digital BOOLEAN DEFAULT FALSE COMMENT 'Indica si el libro es digital (TRUE) o físico (FALSE)',
+    rating TINYINT CHECK (rating >= 1 AND rating <= 5) COMMENT 'Valoración del libro (1 a 5)',
+    visibility BOOLEAN DEFAULT TRUE COMMENT 'Indica si el libro es visible (TRUE) o no (FALSE)',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del registro',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Fecha de última actualización del registro'
+) COMMENT 'Tabla que almacena los libros del catálogo';
+
+
+-- Índices individuales para búsquedas frecuentes
+CREATE INDEX idx_books_title ON books (title);
+CREATE INDEX idx_books_author ON books (author);
+CREATE INDEX idx_books_category ON books (category);
+
+
+-- Índice compuesto para búsquedas combinadas comunes
+CREATE INDEX idx_books_title_author ON books (title, author);
+
+
+-- Índice único para ISBN
+CREATE UNIQUE INDEX idx_books_isbn ON books (isbn);
+
 ```
 
 ### **2. Creación de la tabla `book_inventory`**
 ```sql
-CREATE TABLE `book_inventory` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'Identificador del inventario',
-  `book_id` BIGINT NOT NULL COMMENT 'Referencia al libro',
-  `stock` BIGINT NOT NULL,
-  `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del inventario',
-  `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Fecha de última actualización del inventario',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `book_inventory_unique` (`book_id`),
-  CONSTRAINT `fk_book` FOREIGN KEY (`book_id`) REFERENCES `books` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE book_inventory (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'Identificador del inventario',
+    book_id BIGINT NOT NULL COMMENT 'Referencia al libro',
+    stock INT NOT NULL DEFAULT 0 COMMENT 'Cantidad de libros físicos disponibles',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del inventario',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Fecha de última actualización del inventario',
+
+    -- Llave foránea que relaciona la tabla de libros
+    CONSTRAINT fk_book FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+);
 ```
 
 ---
@@ -221,32 +229,51 @@ CREATE TABLE `book_inventory` (
 
 ### **Inserta libros en la tabla `books`:**
 ```sql
-INSERT INTO books (title, author, publication_date, category, isbn, description, price, image_url, is_digital, rating, visibility, created_at, updated_at)
+INSERT INTO books (title, author, publication_date, category, isbn, description, price, image_url, is_digital, rating, visibility)
 VALUES 
-('The Catcher in the Rye', 'J.D. Salinger', '1951-07-16', 'Fiction', '9780316769488', 'A story about teenage rebellion and alienation.', 12.99, 'https://example.com/images/catcher.jpg', 0, 5, 1, NOW(), NOW()),
-('To Kill a Mockingbird', 'Harper Lee', '1960-07-11', 'Classic', '9780061120084', 'A classic of modern American literature.', 15.50, 'https://example.com/images/mockingbird.jpg', 0, 5, 1, NOW(), NOW()),
-('1984', 'George Orwell', '1949-06-08', 'Dystopian', '9780451524935', 'A novel about totalitarianism and surveillance.', 10.99, 'https://example.com/images/1984.jpg', 1, 4, 1, NOW(), NOW()),
-('Pride and Prejudice', 'Jane Austen', '1813-01-28', 'Romance', '9780141199078', 'A story of love and societal expectations.', 11.25, 'https://example.com/images/pride.jpg', 0, 5, 1, NOW(), NOW()),
-('The Hobbit', 'J.R.R. Tolkien', '1937-09-21', 'Fantasy', '9780261103344', 'A fantasy adventure preceding The Lord of the Rings.', 14.50, 'https://example.com/images/hobbit.jpg', 0, 5, 1, NOW(), NOW()),
-('Moby-Dick', 'Herman Melville', '1851-10-18', 'Adventure', '9780142437247', 'A tale of obsession and revenge on the high seas.', 13.99, 'https://example.com/images/mobydick.jpg', 0, 4, 1, NOW(), NOW()),
-('The Great Gatsby', 'F. Scott Fitzgerald', '1925-04-10', 'Classic', '9780743273565', 'A portrait of the Jazz Age in American history.', 9.99, 'https://example.com/images/gatsby.jpg', 1, 5, 1, NOW(), NOW()),
-('Brave New World', 'Aldous Huxley', '1932-08-01', 'Dystopian', '9780060850524', 'A dystopian world of technological control.', 10.50, 'https://example.com/images/bravenewworld.jpg', 1, 4, 1, NOW(), NOW()),
-('War and Peace', 'Leo Tolstoy', '1869-01-01', 'Historical', '9781400079988', 'An epic novel set during the Napoleonic Wars.', 18.75, 'https://example.com/images/warandpeace.jpg', 0, 5, 1, NOW(), NOW()),
-('Crime and Punishment', 'Fyodor Dostoevsky', '1866-01-01', 'Classic', '9780143058144', 'A psychological exploration of guilt and redemption.', 16.00, 'https://example.com/images/crimeandpunishment.jpg', 0, 5, 1, NOW(), NOW());
+('El código Da Vinci', 'Dan Brown', '2003-03-18', 'Misterio', '9780307474278', 'Un thriller que combina historia, religión y códigos secretos.', 19.99, 'https://example.com/images/davinci.jpg', FALSE, 5, TRUE),
+
+
+('Cien años de soledad', 'Gabriel García Márquez', '1967-06-05', 'Realismo Mágico', '9780060883287', 'La historia épica de la familia Buendía en el pueblo ficticio de Macondo.', 14.50, 'https://example.com/images/cienanos.jpg', FALSE, 5, TRUE),
+
+
+('1984', 'George Orwell', '1949-06-08', 'Distopía', '9780451524935', 'Una novela que advierte sobre los peligros del totalitarismo.', 9.99, 'https://example.com/images/1984.jpg', FALSE, 5, TRUE),
+
+
+('Harry Potter y la piedra filosofal', 'J.K. Rowling', '1997-06-26', 'Fantasía', '9780747532699', 'El comienzo de la saga de Harry Potter y su vida en Hogwarts.', 12.99, 'https://example.com/images/harry1.jpg', FALSE, 4, TRUE),
+
+
+('El señor de los anillos: La comunidad del anillo', 'J.R.R. Tolkien', '1954-07-29', 'Fantasía', '9780261103573', 'Primera parte de la épica aventura de la Tierra Media.', 18.50, 'https://example.com/images/lotr1.jpg', FALSE, 5, TRUE),
+
+
+('El alquimista', 'Paulo Coelho', '1988-05-01', 'Ficción', '9780061122415', 'Una historia inspiradora sobre la búsqueda del destino.', 11.25, 'https://example.com/images/alquimista.jpg', FALSE, 4, TRUE),
+
+
+('Los pilares de la Tierra', 'Ken Follett', '1989-09-29', 'Histórica', '9780451225245', 'Una historia épica de intriga, amor y religión en la Edad Media.', 22.95, 'https://example.com/images/pilares.jpg', FALSE, 5, TRUE),
+
+
+('La sombra del viento', 'Carlos Ruiz Zafón', '2001-04-12', 'Misterio', '9780143126393', 'Una intriga literaria ambientada en la Barcelona de la posguerra.', 15.75, 'https://example.com/images/sombra.jpg', FALSE, 5, TRUE),
+
+
+('Crónica de una muerte anunciada', 'Gabriel García Márquez', '1981-04-01', 'Ficción', '9781400034710', 'Una novela que relata los eventos previos a un asesinato anunciado.', 10.50, 'https://example.com/images/cronica.jpg', FALSE, 4, TRUE),
+
+
+('El hombre en busca de sentido', 'Viktor Frankl', '1946-01-01', 'Autoayuda', '9780807014295', 'Una reflexión sobre la resiliencia humana basada en experiencias del Holocausto.', 13.75, 'https://example.com/images/sentido.jpg', TRUE, 5, TRUE);
+
 ```
 
 ### **Inserta datos iniciales en la tabla `book_inventory`:**
 ```sql
-INSERT INTO book_inventory (book_id, stock, created_at, updated_at)
+INSERT INTO book_inventory (book_id, stock, created_at, updated_at) 
 VALUES 
-(1, 10, NOW(), NOW()),  -- The Catcher in the Rye
-(2, 15, NOW(), NOW()),  -- To Kill a Mockingbird
-(3, 20, NOW(), NOW()),  -- 1984
-(4, 12, NOW(), NOW()),  -- Pride and Prejudice
-(5, 18, NOW(), NOW()),  -- The Hobbit
-(6, 8, NOW(), NOW()),   -- Moby-Dick
-(7, 10, NOW(), NOW()),  -- The Great Gatsby
-(8, 5, NOW(), NOW()),   -- Brave New World
-(9, 7, NOW(), NOW()),   -- War and Peace
-(10, 10, NOW(), NOW()); -- Crime and Punishment
+(1, 10, NOW(), NOW()),  -- El código Da Vinci
+(2, 15, NOW(), NOW()),  -- Cien años de soledad
+(3, 8, NOW(), NOW()),   -- 1984
+(4, 20, NOW(), NOW()),  -- Harry Potter y la piedra filosofal
+(5, 12, NOW(), NOW()),  -- El señor de los anillos: La comunidad del anillo
+(6, 5, NOW(), NOW()),   -- El alquimista
+(7, 18, NOW(), NOW()),  -- Los pilares de la Tierra
+(8, 14, NOW(), NOW()),  -- La sombra del viento
+(9, 9, NOW(), NOW()),   -- Crónica de una muerte anunciada
+(10, 25, NOW(), NOW()); -- El hombre en busca de sentido
 ```
